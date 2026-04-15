@@ -18,13 +18,18 @@ interface SportsDBResponse {
 
 const QUICK_SEARCHES = ["Messi", "Ronaldo", "Neymar", "Haaland", "Mbappé", "Vini Jr"];
 
-async function insertAsSmartObject(imageUrl: string, playerName: string) {
-  const safeName = playerName.replace(/"/g, "");
-  const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
-  const response = await fetch(proxyUrl);
-  const arrayBuffer = await response.arrayBuffer();
-  const script = `app.open(new Uint8Array(photopea.resources[0]), { name: "${safeName}.png" }, true);`;
-  window.parent.postMessage({ photopea: { script, resources: [arrayBuffer] } }, "*");
+function insertAsSmartObject(imageUrl: string, playerName: string) {
+  const safeName = playerName.replace(/['"\\]/g, "");
+  const script = `
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "${imageUrl}", true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function() {
+      app.open(new Uint8Array(xhr.response), { name: "${safeName}.png" }, true);
+    };
+    xhr.send();
+  `;
+  window.parent.postMessage({ photopea: { script } }, "*");
 }
 
 export default function Plugin() {
@@ -52,18 +57,16 @@ export default function Plugin() {
     setPlaced(null);
   }, [query]);
 
-  const handleInsert = async (e: React.MouseEvent, player: Player) => {
+  const handleInsert = (e: React.MouseEvent, player: Player) => {
     e.stopPropagation();
     if (!player.strCutout || inserting) return;
     setInserting(player.idPlayer);
-    try {
-      await insertAsSmartObject(player.strCutout, player.strPlayer);
+    insertAsSmartObject(player.strCutout, player.strPlayer);
+    setTimeout(() => {
       setInserting(null);
       setPlaced(player.idPlayer);
       setTimeout(() => setPlaced(null), 2500);
-    } catch {
-      setInserting(null);
-    }
+    }, 800);
   };
 
   return (

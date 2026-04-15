@@ -56,22 +56,23 @@ function PlayerCard({
   const cutoutUrl = buildCutoutUrl(player.strCutout!, size);
   const cardHeight = size === 0 ? 300 : Math.min(size + 20, 300);
 
-  const handleInsertPhotopea = async (e: React.MouseEvent) => {
+  const handleInsertPhotopea = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (insertState !== "idle") return;
-    setInsertState("loading");
-    try {
-      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(player.strCutout!)}`;
-      const response = await fetch(proxyUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const safeName = player.strPlayer.replace(/"/g, "");
-      const script = `app.open(new Uint8Array(photopea.resources[0]), { name: "${safeName}.png" }, true);`;
-      window.parent.postMessage({ photopea: { script, resources: [arrayBuffer] } }, "*");
-      setInsertState("done");
-      setTimeout(() => setInsertState("idle"), 2500);
-    } catch {
-      setInsertState("idle");
-    }
+    const safeName = player.strPlayer.replace(/['"\\]/g, "");
+    const imageUrl = player.strCutout!;
+    const script = `
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "${imageUrl}", true);
+      xhr.responseType = "arraybuffer";
+      xhr.onload = function() {
+        app.open(new Uint8Array(xhr.response), { name: "${safeName}.png" }, true);
+      };
+      xhr.send();
+    `;
+    window.parent.postMessage({ photopea: { script } }, "*");
+    setInsertState("done");
+    setTimeout(() => setInsertState("idle"), 2500);
   };
 
   return (
