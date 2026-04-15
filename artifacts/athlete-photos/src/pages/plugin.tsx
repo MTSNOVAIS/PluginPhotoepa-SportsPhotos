@@ -61,24 +61,28 @@ export default function Plugin() {
     setPlaced(null);
   }, [query]);
 
-  const handleInsert = (player: Player) => {
+  const handleInsert = async (player: Player) => {
     if (!player.strCutout || inserting) return;
-
     const safeName = player.strPlayer.replace(/['"\\]/g, "");
-    const imageUrl = player.strCutout;
-
     setInserting(player.idPlayer);
-    setLog("Enviando script para Photopea...");
-
-    const script = `app.open("${imageUrl}"); app.echoToOE("done");`;
-
-    window.parent.postMessage({ photopea: { script, resultType: "text" } }, "*");
-
-    setTimeout(() => {
+    setLog("Buscando imagem...");
+    try {
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(player.strCutout)}`;
+      const resp = await fetch(proxyUrl);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const arrayBuffer = await resp.arrayBuffer();
+      const script = `app.open(new Uint8Array(photopea.resources[0]), { name: "${safeName}.png" }); app.echoToOE("done");`;
+      window.parent.postMessage({ photopea: { script, resultType: "text", resources: [arrayBuffer] } }, "*");
+      setLog("✓ Enviado ao Photopea!");
+      setTimeout(() => {
+        setInserting(null);
+        setPlaced(player.idPlayer);
+        setTimeout(() => setPlaced(null), 3000);
+      }, 500);
+    } catch (err) {
+      setLog("Erro: " + String(err));
       setInserting(null);
-      setPlaced(player.idPlayer);
-      setTimeout(() => setPlaced(null), 3000);
-    }, 1000);
+    }
   };
 
   return (
