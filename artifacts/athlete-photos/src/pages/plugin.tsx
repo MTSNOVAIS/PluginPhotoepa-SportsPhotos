@@ -70,20 +70,7 @@ export default function Plugin() {
     setInserting(player.idPlayer);
     setLog("Enviando script para Photopea...");
 
-    const script = `
-      app.echoToOE("script_started");
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "${imageUrl}", true);
-      xhr.responseType = "arraybuffer";
-      xhr.onload = function() {
-        app.open(new Uint8Array(xhr.response), { name: "${safeName}.png" }, true);
-        app.echoToOE("done");
-      };
-      xhr.onerror = function() {
-        app.echoToOE("xhr_error");
-      };
-      xhr.send();
-    `;
+    const script = `app.open("${imageUrl}"); app.echoToOE("done");`;
 
     window.parent.postMessage({ photopea: { script, resultType: "text" } }, "*");
 

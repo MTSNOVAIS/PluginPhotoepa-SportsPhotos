@@ -59,17 +59,8 @@ function PlayerCard({
   const handleInsertPhotopea = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (insertState !== "idle") return;
-    const safeName = player.strPlayer.replace(/['"\\]/g, "");
     const imageUrl = player.strCutout!;
-    const script = `
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "${imageUrl}", true);
-      xhr.responseType = "arraybuffer";
-      xhr.onload = function() {
-        app.open(new Uint8Array(xhr.response), { name: "${safeName}.png" }, true);
-      };
-      xhr.send();
-    `;
+    const script = `app.open("${imageUrl}");`;
     window.parent.postMessage({ photopea: { script } }, "*");
     setInsertState("done");
     setTimeout(() => setInsertState("idle"), 2500);
