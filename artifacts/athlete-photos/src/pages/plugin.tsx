@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, CheckCircle, Loader2 } from "lucide-react";
+import { Search, X, CheckCircle, Loader2, Plus } from "lucide-react";
 
 interface Player {
   idPlayer: string;
@@ -19,27 +19,22 @@ interface SportsDBResponse {
 const QUICK_SEARCHES = ["Messi", "Ronaldo", "Neymar", "Haaland", "Mbappé", "Vini Jr"];
 
 function insertAsSmartObject(imageUrl: string, playerName: string) {
+  const safeName = playerName.replace(/"/g, "");
   const script = `
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "${imageUrl}", true);
-    xhr.responseType = "arraybuffer";
-    xhr.onload = function() {
-      var blob = new Uint8Array(xhr.response);
-      app.open(blob, { name: "${playerName}.png" }, true);
-    };
-    xhr.send();
+    fetch("${imageUrl}")
+      .then(function(r){ return r.arrayBuffer(); })
+      .then(function(data){
+        app.open(new Uint8Array(data), { name: "${safeName}.png" }, true);
+      });
   `;
-  window.parent.postMessage(
-    { photopea: { script } },
-    "https://www.photopea.com"
-  );
+  window.parent.postMessage({ photopea: { script } }, "https://www.photopea.com");
 }
 
 export default function Plugin() {
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [placed, setPlaced] = useState<string | null>(null);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [inserting, setInserting] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery<SportsDBResponse>({
     queryKey: ["players-plugin", searchTerm],
@@ -60,22 +55,23 @@ export default function Plugin() {
     setPlaced(null);
   }, [query]);
 
-  const handlePlace = (player: Player) => {
-    if (!player.strCutout || loading) return;
-    setLoading(player.idPlayer);
+  const handleInsert = (e: React.MouseEvent, player: Player) => {
+    e.stopPropagation();
+    if (!player.strCutout || inserting) return;
+    setInserting(player.idPlayer);
     insertAsSmartObject(player.strCutout, player.strPlayer);
     setTimeout(() => {
-      setLoading(null);
+      setInserting(null);
       setPlaced(player.idPlayer);
-      setTimeout(() => setPlaced(null), 2000);
-    }, 1000);
+      setTimeout(() => setPlaced(null), 2500);
+    }, 1200);
   };
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] text-white flex flex-col">
       <div className="bg-[#141414] border-b border-[#333] px-4 py-3">
         <h1 className="font-bold text-white text-base">Athlete Cutouts</h1>
-        <p className="text-[11px] text-gray-400 mt-0.5">Toque para inserir como objeto inteligente</p>
+        <p className="text-[11px] text-gray-400 mt-0.5">Busque e insira cutouts no Photopea</p>
       </div>
 
       <div className="px-3 pt-3 pb-2 space-y-2">
@@ -122,11 +118,11 @@ export default function Plugin() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-4">
+      <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-2">
         {isLoading && (
-          <div className="grid grid-cols-2 gap-2 mt-1">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-[#2a2a2a] rounded-xl animate-pulse" style={{ height: 140 }} />
+          <div className="space-y-2 mt-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-[#2a2a2a] rounded-xl animate-pulse h-16" />
             ))}
           </div>
         )}
@@ -140,63 +136,72 @@ export default function Plugin() {
 
         {!isLoading && players.length > 0 && (
           <>
-            <p className="text-[11px] text-gray-500 mt-1 mb-2">
+            <p className="text-[11px] text-gray-500 mt-1">
               {players.length} cutout{players.length !== 1 ? "s" : ""} encontrado{players.length !== 1 ? "s" : ""}
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              {players.map((player) => {
-                const isPlaced = placed === player.idPlayer;
-                const isLoading_ = loading === player.idPlayer;
-                return (
-                  <button
-                    key={player.idPlayer}
-                    onClick={() => handlePlace(player)}
-                    disabled={!!loading}
-                    className="relative bg-[#2a2a2a] hover:bg-[#333] active:bg-[#3a3a3a] rounded-xl overflow-hidden border border-[#444] hover:border-blue-500 transition-all"
-                    style={{ height: 140 }}
-                    title={`Inserir ${player.strPlayer}`}
+            {players.map((player) => {
+              const isPlaced = placed === player.idPlayer;
+              const isInserting = inserting === player.idPlayer;
+              return (
+                <div
+                  key={player.idPlayer}
+                  className="flex items-center gap-3 bg-[#2a2a2a] border border-[#3a3a3a] rounded-xl px-3 py-2"
+                >
+                  <div
+                    className="shrink-0 rounded-lg overflow-hidden flex items-center justify-center"
+                    style={{
+                      width: 52,
+                      height: 64,
+                      background: "linear-gradient(160deg, #2d3040 0%, #232635 100%)",
+                    }}
                   >
-                    <div
-                      className="w-full h-full flex items-end justify-center"
-                      style={{ background: "linear-gradient(160deg, #2d3040 0%, #232635 100%)" }}
-                    >
-                      <img
-                        src={`${player.strCutout}/preview`}
-                        alt={player.strPlayer}
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
+                    <img
+                      src={`${player.strCutout}/preview`}
+                      alt={player.strPlayer}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
 
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-2 pt-6">
-                      <p className="text-[11px] text-white font-semibold leading-tight truncate text-left">
-                        {player.strPlayer}
-                      </p>
-                      {player.strTeam && (
-                        <p className="text-[10px] text-gray-400 truncate text-left">{player.strTeam}</p>
-                      )}
-                    </div>
-
-                    {(isPlaced || isLoading_) && (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-xl"
-                        style={{ background: isPlaced ? "rgba(37,99,235,0.85)" : "rgba(0,0,0,0.6)" }}>
-                        {isLoading_ ? (
-                          <Loader2 size={28} className="text-white animate-spin" />
-                        ) : (
-                          <CheckCircle size={28} className="text-white" />
-                        )}
-                      </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white font-semibold truncate">{player.strPlayer}</p>
+                    {player.strTeam && (
+                      <p className="text-[11px] text-gray-400 truncate">{player.strTeam}</p>
                     )}
+                    {player.strPosition && (
+                      <p className="text-[10px] text-gray-500 truncate">{player.strPosition}</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={(e) => handleInsert(e, player)}
+                    disabled={!!inserting}
+                    className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all ${
+                      isPlaced
+                        ? "bg-green-600 text-white"
+                        : isInserting
+                        ? "bg-blue-700 text-white"
+                        : "bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white"
+                    }`}
+                  >
+                    {isInserting ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : isPlaced ? (
+                      <CheckCircle size={14} />
+                    ) : (
+                      <Plus size={14} />
+                    )}
+                    {isInserting ? "..." : isPlaced ? "Ok!" : "Inserir"}
                   </button>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </>
         )}
 
         {!searchTerm && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-sm px-4">
-              Busque um atleta e toque na foto para inserir o cutout no documento ativo como objeto inteligente.
+              Busque um atleta e toque em <strong className="text-gray-400">Inserir</strong> para adicionar o cutout ao documento ativo.
             </p>
           </div>
         )}

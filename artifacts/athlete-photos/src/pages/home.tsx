@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Image, ExternalLink, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { Search, X, Image, ExternalLink, ChevronDown, SlidersHorizontal, Download } from "lucide-react";
 
 interface Player {
   idPlayer: string;
@@ -55,6 +55,16 @@ function PlayerCard({
   const cutoutUrl = buildCutoutUrl(player.strCutout!, size);
   const cardHeight = size === 0 ? 300 : Math.min(size + 20, 300);
 
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const a = document.createElement("a");
+    a.href = player.strCutout!;
+    a.download = `${player.strPlayer}.png`;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.click();
+  };
+
   return (
     <div
       onClick={onClick}
@@ -86,6 +96,13 @@ function PlayerCard({
             {player.strSport}
           </span>
         )}
+        <button
+          onClick={handleDownload}
+          className="absolute top-2 right-2 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Baixar cutout"
+        >
+          <Download size={13} className="text-slate-700" />
+        </button>
       </div>
       <div className="p-3">
         <h3 className="font-semibold text-slate-900 text-sm truncate">{player.strPlayer}</h3>
