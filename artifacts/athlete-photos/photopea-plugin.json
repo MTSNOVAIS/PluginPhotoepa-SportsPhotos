@@ -1,0 +1,45 @@
+{
+  "name": "Athlete Cutouts",
+  "version": "1.0.0",
+  "description": "Busque e insira fotos cutout de atletas diretamente no seu documento Photopea. Cobre todos os esportes: futebol, basquete, tênis, MMA, F1 e mais.",
+  "author": "Athlete Photos",
+  "host": {
+    "app": "Photopea",
+    "minVersion": "23.0"
+  },
+  "main": "https://SEU-PROJETO.vercel.app/plugin",
+  "icon": "https://SEU-PROJETO.vercel.app/icon.png",
+  "panels": [
+    {
+      "id": "athlete-cutouts-panel",
+      "label": "Athlete Cutouts",
+      "url": "https://SEU-PROJETO.vercel.app/plugin",
+      "defaultSize": {
+        "width": 280,
+        "height": 600
+      },
+      "minimumSize": {
+        "width": 220,
+        "height": 400
+      }
+    }
+  ],
+  "instructions": {
+    "pt": [
+      "1. Faça o deploy deste projeto no Vercel (vercel.com)",
+      "2. Substitua 'SEU-PROJETO.vercel.app' pela URL do seu deploy neste arquivo",
+      "3. No Photopea, vá em Plugins > Load Plugin",
+      "4. Cole a URL deste arquivo JSON ou faça upload dele",
+      "5. O painel 'Athlete Cutouts' aparecerá na barra lateral",
+      "6. Busque um atleta e clique na foto para inserir o cutout no documento ativo"
+    ],
+    "en": [
+      "1. Deploy this project on Vercel (vercel.com)",
+      "2. Replace 'SEU-PROJETO.vercel.app' with your deploy URL in this file",
+      "3. In Photopea, go to Plugins > Load Plugin",
+      "4. Paste the URL of this JSON file or upload it",
+      "5. The 'Athlete Cutouts' panel will appear in the sidebar",
+      "6. Search for an athlete and click the photo to place the cutout in the active document"
+    ]
+  }
+}

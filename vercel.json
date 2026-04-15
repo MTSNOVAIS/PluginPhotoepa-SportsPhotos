@@ -1,0 +1,16 @@
+{
+  "buildCommand": "pnpm install && pnpm --filter @workspace/athlete-photos run build",
+  "outputDirectory": "artifacts/athlete-photos/dist/public",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
