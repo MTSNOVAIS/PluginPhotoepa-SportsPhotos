@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Image, ExternalLink, ChevronDown, SlidersHorizontal, Plus } from "lucide-react";
+import { Search, X, Image, ExternalLink, ChevronDown, SlidersHorizontal, Plus, Loader2, CheckCircle } from "lucide-react";
 
 interface Player {
   idPlayer: string;
@@ -52,21 +52,26 @@ function PlayerCard({
   onClick: () => void;
 }) {
   const [imgError, setImgError] = useState(false);
+  const [insertState, setInsertState] = useState<"idle" | "loading" | "done">("idle");
   const cutoutUrl = buildCutoutUrl(player.strCutout!, size);
   const cardHeight = size === 0 ? 300 : Math.min(size + 20, 300);
 
-  const handleInsertPhotopea = (e: React.MouseEvent) => {
+  const handleInsertPhotopea = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const safeName = player.strPlayer.replace(/"/g, "");
-    const imageUrl = player.strCutout!;
-    const script = `
-      fetch("${imageUrl}")
-        .then(function(r){ return r.arrayBuffer(); })
-        .then(function(data){
-          app.open(new Uint8Array(data), { name: "${safeName}.png" }, true);
-        });
-    `;
-    window.parent.postMessage({ photopea: { script } }, "https://www.photopea.com");
+    if (insertState !== "idle") return;
+    setInsertState("loading");
+    try {
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(player.strCutout!)}`;
+      const response = await fetch(proxyUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const safeName = player.strPlayer.replace(/"/g, "");
+      const script = `app.open(new Uint8Array(photopea.resources[0]), { name: "${safeName}.png" }, true);`;
+      window.parent.postMessage({ photopea: { script, resources: [arrayBuffer] } }, "*");
+      setInsertState("done");
+      setTimeout(() => setInsertState("idle"), 2500);
+    } catch {
+      setInsertState("idle");
+    }
   };
 
   return (
@@ -102,10 +107,21 @@ function PlayerCard({
         )}
         <button
           onClick={handleInsertPhotopea}
-          className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 p-1.5 rounded-full shadow"
+          disabled={insertState !== "idle"}
+          className={`absolute top-2 right-2 p-1.5 rounded-full shadow transition-colors ${
+            insertState === "done"
+              ? "bg-green-500"
+              : "bg-blue-600 hover:bg-blue-500 active:bg-blue-700"
+          }`}
           title="Inserir no Photopea"
         >
-          <Plus size={13} className="text-white" />
+          {insertState === "loading" ? (
+            <Loader2 size={13} className="text-white animate-spin" />
+          ) : insertState === "done" ? (
+            <CheckCircle size={13} className="text-white" />
+          ) : (
+            <Plus size={13} className="text-white" />
+          )}
         </button>
       </div>
       <div className="p-3">
