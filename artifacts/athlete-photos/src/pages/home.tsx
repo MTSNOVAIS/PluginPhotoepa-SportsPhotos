@@ -57,11 +57,10 @@ function PlayerCard({
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(player.strCutout!)}`;
     const a = document.createElement("a");
-    a.href = player.strCutout!;
+    a.href = proxyUrl;
     a.download = `${player.strPlayer}.png`;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
     a.click();
   };
 
