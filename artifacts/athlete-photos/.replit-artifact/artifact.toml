@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Athlete Photos"
+version = "1.0.0"
+id = "artifacts/athlete-photos"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23505
+
+[services.development]
+run = "pnpm --filter @workspace/athlete-photos run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/athlete-photos", "run", "build" ]
+publicDir = "artifacts/athlete-photos/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23505"
+BASE_PATH = "/"
