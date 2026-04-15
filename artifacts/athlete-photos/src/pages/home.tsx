@@ -98,7 +98,7 @@ function PlayerCard({
         )}
         <button
           onClick={handleDownload}
-          className="absolute top-2 right-2 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 bg-white/90 hover:bg-white active:bg-white backdrop-blur-sm p-1.5 rounded-full shadow"
           title="Baixar cutout"
         >
           <Download size={13} className="text-slate-700" />
