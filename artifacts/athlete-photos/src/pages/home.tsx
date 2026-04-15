@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Image, ExternalLink, ChevronDown, SlidersHorizontal, Download } from "lucide-react";
+import { Search, X, Image, ExternalLink, ChevronDown, SlidersHorizontal, Plus } from "lucide-react";
 
 interface Player {
   idPlayer: string;
@@ -55,13 +55,18 @@ function PlayerCard({
   const cutoutUrl = buildCutoutUrl(player.strCutout!, size);
   const cardHeight = size === 0 ? 300 : Math.min(size + 20, 300);
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleInsertPhotopea = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(player.strCutout!)}`;
-    const a = document.createElement("a");
-    a.href = proxyUrl;
-    a.download = `${player.strPlayer}.png`;
-    a.click();
+    const safeName = player.strPlayer.replace(/"/g, "");
+    const imageUrl = player.strCutout!;
+    const script = `
+      fetch("${imageUrl}")
+        .then(function(r){ return r.arrayBuffer(); })
+        .then(function(data){
+          app.open(new Uint8Array(data), { name: "${safeName}.png" }, true);
+        });
+    `;
+    window.parent.postMessage({ photopea: { script } }, "https://www.photopea.com");
   };
 
   return (
@@ -96,11 +101,11 @@ function PlayerCard({
           </span>
         )}
         <button
-          onClick={handleDownload}
-          className="absolute top-2 right-2 bg-white/90 hover:bg-white active:bg-white backdrop-blur-sm p-1.5 rounded-full shadow"
-          title="Baixar cutout"
+          onClick={handleInsertPhotopea}
+          className="absolute top-2 right-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 p-1.5 rounded-full shadow"
+          title="Inserir no Photopea"
         >
-          <Download size={13} className="text-slate-700" />
+          <Plus size={13} className="text-white" />
         </button>
       </div>
       <div className="p-3">
